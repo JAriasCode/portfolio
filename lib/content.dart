@@ -18,6 +18,7 @@ abstract class Copy {
     'Flutter Engineer',
     'Mobile App Developer',
     'Firebase Specialist',
+    'AI-Assisted Engineering',
     'One Codebase, Every Platform',
   ];
 
@@ -39,6 +40,10 @@ abstract class Copy {
       'and SSL pinning for a Costa Rican mutual, built WordPress admin '
       'panels that talk straight to Firestore, and set up CI/CD pipelines '
       'so every release is a button, not a ritual.\n\n'
+      'I also run an AI-native workflow: Claude Code as a daily pair '
+      'programmer, custom skills and hooks tuned to each project, MCP '
+      'servers wiring my tools together, and an AI review gate in CI that '
+      'every pull request passes before a human merges it.\n\n'
       'Opinions I will defend: state management should match the problem, '
       'not the trend. Ship to a cheap Android before you ship to an iPhone. '
       'And a well-kept CHANGELOG is a love letter to your future self.';
@@ -65,21 +70,27 @@ class Stat {
 const stats = [
   Stat(4, '+', 'Apps in production'),
   Stat(117, '+', 'Automated tests in NuMbi'),
-  Stat(3, '', 'State management stacks'),
+  Stat(4, '', 'State management stacks'),
   Stat(2, '', 'App stores, plus web'),
 ];
 
-/// Experience timeline entries, most recent first.
+/// Experience timeline entries, ordered by start date, most recent first.
 class Experience {
   final String role;
   final String org;
+
+  /// Date range shown next to the org line.
   final String period;
+
+  /// Short status shown as the accent chip (Current, Live, ...).
+  final String status;
   final String summary;
   final List<String> tags;
   const Experience({
     required this.role,
     required this.org,
     required this.period,
+    required this.status,
     required this.summary,
     required this.tags,
   });
@@ -87,19 +98,10 @@ class Experience {
 
 const experience = [
   Experience(
-    role: 'Flutter Engineer',
-    org: 'FullStack Labs · Prep Baseball',
-    period: 'Current',
-    summary:
-        'Consumer app for the largest amateur baseball scouting network in '
-        'the US. Player profiles, rankings and event coverage on iOS, '
-        'Android and web from one codebase.',
-    tags: ['Flutter', 'BLoC / Cubits', 'Dio', 'Firebase', 'Web + mobile'],
-  ),
-  Experience(
     role: 'Mobile Lead',
     org: 'Poker Jacks · Vivco',
-    period: 'In development',
+    period: 'May 2026 – Present',
+    status: 'In development',
     summary:
         'Condominium management platform for Costa Rica: visitor passes, '
         'amenity reservations, NFC and QR gate access. Offline-first, '
@@ -109,7 +111,8 @@ const experience = [
   Experience(
     role: 'Founder & Developer',
     org: 'NuMbi',
-    period: 'Live',
+    period: '2025 – Present',
+    status: 'Live',
     summary:
         'Nutrition app for a Costa Rican practice: 2,800+ local foods, '
         'macro tracking, recipes and premium content, plus a WordPress '
@@ -117,12 +120,25 @@ const experience = [
     tags: ['Flutter', 'Riverpod', 'Firestore', 'FCM', 'GA4'],
   ),
   Experience(
+    role: 'Flutter Engineer',
+    org: 'FullStack Labs · Prep Baseball',
+    period: '2024 – Present',
+    status: 'Current',
+    summary:
+        'Consumer app for the largest amateur baseball scouting network in '
+        'the US. Player profiles, rankings and event coverage on iOS, '
+        'Android and web from one codebase.',
+    tags: ['Flutter', 'BLoC / Cubits', 'Dio', 'Firebase', 'Web + mobile'],
+  ),
+  Experience(
     role: 'Flutter Developer',
     org: 'Freelance · MutualMovil',
-    period: 'In production',
+    period: '2023 – Present',
+    status: 'In production',
     summary:
         'Mobile banking for a Costa Rican mutual. Biometric login, SSL '
-        'pinning, and dual distribution for Google and Huawei devices.',
+        'pinning, and dual distribution for Google and Huawei devices. '
+        'Now at v2, maintained in production.',
     tags: ['Flutter', 'GetX', 'Biometrics', 'SSL pinning', 'GMS + HMS'],
   ),
 ];
@@ -144,9 +160,17 @@ const skillGroups = [
   ]),
   SkillGroup('State Management', [
     'Riverpod',
+    'Provider',
     'BLoC / Cubits',
     'GetX',
     'Chosen per problem, not trend',
+  ]),
+  SkillGroup('AI & Agentic Workflows', [
+    'Claude Code, daily driver',
+    'Custom skills & hooks',
+    'MCP servers (GitHub, Firebase, Figma)',
+    'Multi-agent workflows',
+    'AI review gates in CI',
   ]),
   SkillGroup('Backend & Firebase', [
     'Firestore · Auth · Storage',

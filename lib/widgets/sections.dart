@@ -58,7 +58,7 @@ class NavBar extends StatelessWidget {
                 )),
           ),
           const SizedBox(width: 10),
-          Text('Jeffry.',
+          Text('Jeffry Arias.',
               style: Type.title(context).copyWith(fontWeight: FontWeight.w600)),
           const Spacer(),
           for (final name in entries) ...[
@@ -367,6 +367,7 @@ class AboutSection extends StatelessWidget {
               'Based in San José, Costa Rica',
               'Remote with US teams via FullStack Labs',
               'Flutter on iOS, Android and web',
+              'AI-native workflow: Claude Code + MCP, daily',
               'Spanish and English, daily',
               'Side quests in WordPress and WooCommerce',
             ]) ...[
@@ -527,12 +528,20 @@ class _TimelineEntry extends StatelessWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(entry.role, style: Type.title(context)),
-                          TagChip(entry.period, accent: true),
+                          TagChip(entry.status, accent: true),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(entry.org,
-                          style: Type.mono(context, color: Palette.cyan)),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 4,
+                        children: [
+                          Text(entry.org,
+                              style:
+                                  Type.mono(context, color: Palette.cyan)),
+                          Text(entry.period, style: Type.mono(context)),
+                        ],
+                      ),
                       const SizedBox(height: 12),
                       Text(entry.summary, style: Type.body(context)),
                       const SizedBox(height: 16),
@@ -783,7 +792,12 @@ class LabSection extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 190, child: demos[i]),
+                        // Full width so each demo's Stack centers in the
+                        // card instead of shrink-wrapping to the left edge.
+                        SizedBox(
+                            height: 190,
+                            width: double.infinity,
+                            child: demos[i]),
                         const SizedBox(height: 10),
                         GradientText(labDemos[i].title,
                             style: Type.title(context, min: 16, max: 20)),
