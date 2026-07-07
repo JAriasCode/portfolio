@@ -1,0 +1,53 @@
+name: portfolio
+description: "Personal portfolio of Jeffry Arias, Flutter engineer. Built in Flutter for web."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Official JS-interop bindings, used only to open external links on web.
+  # Deliberately the single third-party dependency of the site.
+  web: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/fonts/
+
+  # Self-hosted type. Erode (display serif) and Author (text sans) come from
+  # Fontshare / Indian Type Foundry under the FFL. Fragment Mono is OFL.
+  fonts:
+    - family: Erode
+      fonts:
+        - asset: assets/fonts/Erode-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Erode-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Erode-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/Erode-Bold.ttf
+          weight: 700
+    - family: Author
+      fonts:
+        - asset: assets/fonts/Author-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Author-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Author-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/Author-Bold.ttf
+          weight: 700
+    - family: FragmentMono
+      fonts:
+        - asset: assets/fonts/FragmentMono-Regular.ttf
+          weight: 400
