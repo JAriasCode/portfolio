@@ -184,10 +184,20 @@ class _HeroSectionState extends State<HeroSection>
                 _staged(
                   0.3,
                   0.65,
-                  TypingText(
-                    phrases: Copy.roles,
-                    style: Type.title(context, min: 20, max: 30)
-                        .copyWith(color: Palette.text),
+                  // Fixed-height slot so the hero never changes height while
+                  // the role types/erases (a height change would resize the
+                  // particle field behind it). FittedBox shrinks the longest
+                  // phrase on narrow screens instead of wrapping.
+                  SizedBox(
+                    height: fluid(context, 30, 42),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: TypingText(
+                        phrases: Copy.roles,
+                        style: Type.title(context, min: 20, max: 30)
+                            .copyWith(color: Palette.text),
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(height: fluid(context, 18, 26)),

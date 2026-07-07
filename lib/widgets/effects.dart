@@ -38,6 +38,7 @@ class _ParticleFieldState extends State<ParticleField>
     _ticker = createTicker(_tick)..start();
   }
 
+  /// First layout only: populate the field.
   void _seed(Size size) {
     _size = size;
     _particles.clear();
@@ -77,13 +78,31 @@ class _ParticleFieldState extends State<ParticleField>
     super.dispose();
   }
 
+  /// Later size changes (e.g. the hero grows a line when the typing text
+  /// wraps) must NOT reshuffle the sky: keep every particle where it is and
+  /// let the wrap-around logic absorb the new bounds. Reseeding here caused
+  /// a visible constellation "jump" every few seconds.
+  void _resize(Size size) {
+    _size = size;
+    for (final p in _particles) {
+      p.pos = Offset(
+        p.pos.dx.clamp(0.0, size.width),
+        p.pos.dy.clamp(0.0, size.height),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = constraints.biggest;
-          if (size != _size) _seed(size);
+          if (_particles.isEmpty) {
+            _seed(size);
+          } else if (size != _size) {
+            _resize(size);
+          }
           return CustomPaint(
             size: size,
             painter: _ParticlePainter(particles: _particles),
