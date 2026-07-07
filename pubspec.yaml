@@ -24,29 +24,29 @@ flutter:
   assets:
     - assets/fonts/
 
-  # Self-hosted type. Erode (display serif) and Author (text sans) come from
+  # Self-hosted type. Chillax (display) and Supreme (text) come from
   # Fontshare / Indian Type Foundry under the FFL. Fragment Mono is OFL.
   fonts:
-    - family: Erode
+    - family: Chillax
       fonts:
-        - asset: assets/fonts/Erode-Regular.ttf
+        - asset: assets/fonts/Chillax-Regular.ttf
           weight: 400
-        - asset: assets/fonts/Erode-Medium.ttf
+        - asset: assets/fonts/Chillax-Medium.ttf
           weight: 500
-        - asset: assets/fonts/Erode-Semibold.ttf
+        - asset: assets/fonts/Chillax-Semibold.ttf
           weight: 600
-        - asset: assets/fonts/Erode-Bold.ttf
+        - asset: assets/fonts/Chillax-Bold.ttf
           weight: 700
-    - family: Author
+    - family: Supreme
       fonts:
-        - asset: assets/fonts/Author-Regular.ttf
+        - asset: assets/fonts/Supreme-Regular.ttf
           weight: 400
-        - asset: assets/fonts/Author-Medium.ttf
+        - asset: assets/fonts/Supreme-Medium.ttf
           weight: 500
-        - asset: assets/fonts/Author-Semibold.ttf
-          weight: 600
-        - asset: assets/fonts/Author-Bold.ttf
+        - asset: assets/fonts/Supreme-Bold.ttf
           weight: 700
+        - asset: assets/fonts/Supreme-Extrabold.ttf
+          weight: 800
     - family: FragmentMono
       fonts:
         - asset: assets/fonts/FragmentMono-Regular.ttf

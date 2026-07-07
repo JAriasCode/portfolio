@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../util/open_url.dart';
 import 'common.dart';
 import 'effects.dart';
+import 'lab.dart';
 import 'motifs.dart';
 import 'motion.dart';
 
@@ -12,9 +13,8 @@ import 'motion.dart';
 // NAV
 // ---------------------------------------------------------------------------
 
-/// Top bar: brand on the left, numbered anchors on the right.
-/// On phones the anchors collapse to just "work" and "contact",
-/// the two links that actually matter there.
+/// Top bar: gradient logo mark + name, section links on the right.
+/// Mobile keeps only the links that matter on a phone.
 class NavBar extends StatelessWidget {
   final void Function(String section) onJump;
 
@@ -24,32 +24,50 @@ class NavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final mobile = isMobile(context);
     final entries = mobile
-        ? const [('01', 'work'), ('04', 'contact')]
-        : const [
-            ('01', 'work'),
-            ('02', 'stack'),
-            ('03', 'about'),
-            ('04', 'contact'),
-          ];
+        ? const ['projects', 'contact']
+        : const ['about', 'experience', 'skills', 'projects', 'lab', 'contact'];
     return Container(
-      decoration: const BoxDecoration(
-        color: Palette.ink,
-        border: Border(bottom: BorderSide(color: Palette.line)),
+      decoration: BoxDecoration(
+        color: Palette.bg.withValues(alpha: 0.85),
+        border: const Border(bottom: BorderSide(color: Palette.line)),
       ),
       padding: EdgeInsets.symmetric(
-          horizontal: fluid(context, 20, 64), vertical: 18),
+          horizontal: fluid(context, 20, 64), vertical: 14),
       child: Row(
         children: [
-          Text('JAriasCode',
-              style: Type.code(context).copyWith(fontSize: 15)),
+          // Logo mark: gradient rounded square with the initial.
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: Palette.gradient,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                    color: Palette.blue.withValues(alpha: 0.4),
+                    blurRadius: 16),
+              ],
+            ),
+            child: const Text('J',
+                style: TextStyle(
+                  fontFamily: 'Chillax',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: Color(0xFF04101F),
+                )),
+          ),
+          const SizedBox(width: 10),
+          Text('Jeffry.',
+              style: Type.title(context).copyWith(fontWeight: FontWeight.w600)),
           const Spacer(),
-          for (final (index, name) in entries) ...[
+          for (final name in entries) ...[
             HoverLink(
               text: name,
-              style: Type.label(context, color: Palette.paper),
+              style: Type.label(context, color: Palette.text),
               onTap: () => onJump(name),
             ),
-            if ((index, name) != entries.last) const SizedBox(width: 28),
+            if (name != entries.last) const SizedBox(width: 26),
           ],
         ],
       ),
@@ -61,13 +79,15 @@ class NavBar extends StatelessWidget {
 // HERO
 // ---------------------------------------------------------------------------
 
-/// Orchestrated entrance: kicker, the two name lines, statement, CTA row,
-/// each on its own delay. Plays once. The underline under "Flutter" is
-/// the site's single hand-drawn mark.
+/// Centered hero over the particle field. One controller drives the whole
+/// entrance through staggered Intervals: ring, kicker, name, role, statement,
+/// CTAs, stats. Plays once.
 class HeroSection extends StatefulWidget {
   final VoidCallback onSeeWork;
+  final VoidCallback onContact;
 
-  const HeroSection({super.key, required this.onSeeWork});
+  const HeroSection(
+      {super.key, required this.onSeeWork, required this.onContact});
 
   @override
   State<HeroSection> createState() => _HeroSectionState();
@@ -75,527 +95,236 @@ class HeroSection extends StatefulWidget {
 
 class _HeroSectionState extends State<HeroSection>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _underline = AnimationController(
+  late final AnimationController _entrance = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 700),
+    duration: const Duration(milliseconds: 2000),
   );
+
+  /// One eased window of the shared controller per element (skill pattern:
+  /// staggered animation = one controller + offset Intervals).
+  Animation<double> _window(double start, double end) => CurvedAnimation(
+        parent: _entrance,
+        curve: Interval(start, end, curve: Curves.easeOutCubic),
+      );
 
   @override
   void initState() {
     super.initState();
-    // The underline draws itself after the statement has settled.
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) _underline.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      reducedMotion(context) ? _entrance.value = 1 : _entrance.forward();
     });
   }
 
   @override
   void dispose() {
-    _underline.dispose();
+    _entrance.dispose();
     super.dispose();
+  }
+
+  /// Fade + rise wrapper bound to one interval window.
+  Widget _staged(double start, double end, Widget child) {
+    final anim = _window(start, end);
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (context, c) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+            offset: Offset(0, 26 * (1 - anim.value)), child: c),
+      ),
+      child: child,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context).height;
-    return SectionShell(
-      child: ConstrainedBox(
-        // Hero owns most of the first viewport but always leaves a sliver
-        // of the next section visible: signal that there is more below.
-        constraints: BoxConstraints(minHeight: viewport * 0.82),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: fluid(context, 48, 96)),
-            Reveal(
-              delay: const Duration(milliseconds: 80),
-              child: Text(Copy.kicker, style: Type.label(context)),
-            ),
-            SizedBox(height: fluid(context, 20, 36)),
-            // Name as monument, two staggered lines. The second line is
-            // indented: asymmetry on purpose, nothing here is centered.
-            Reveal(
-              delay: const Duration(milliseconds: 220),
-              dy: 34,
-              child: Text(Copy.heroFirst, style: Type.display(context)),
-            ),
-            Reveal(
-              delay: const Duration(milliseconds: 360),
-              dy: 34,
-              child: Padding(
-                padding: EdgeInsets.only(left: fluid(context, 32, 140)),
-                child: Text(Copy.heroSecond,
-                    style: Type.display(context, color: Palette.paperDim)),
-              ),
-            ),
-            SizedBox(height: fluid(context, 28, 48)),
-            Reveal(
-              delay: const Duration(milliseconds: 560),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: _statement(context),
-              ),
-            ),
-            SizedBox(height: fluid(context, 28, 44)),
-            Reveal(
-              delay: const Duration(milliseconds: 720),
-              child: Wrap(
-                spacing: 32,
-                runSpacing: 16,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  HoverLink(
-                    text: 'see the work',
-                    showArrow: true,
-                    style: Type.body(context)
-                        .copyWith(fontWeight: FontWeight.w600),
-                    onTap: widget.onSeeWork,
-                  ),
-                  HoverLink(
-                    text: 'github/JAriasCode',
-                    style: Type.code(context, color: Palette.paperDim),
-                    onTap: () => openUrl(Links.github),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: fluid(context, 48, 96)),
-          ],
+    return Stack(
+      children: [
+        // Constellation + glow depth, clipped to the hero band only.
+        const Positioned.fill(child: ParticleField()),
+        Positioned(
+          top: -120,
+          left: -80,
+          child: GlowBlob(size: fluid(context, 320, 560)),
         ),
-      ),
-    );
-  }
-
-  /// Statement paragraph with the wobbly underline drawn under "Flutter".
-  Widget _statement(BuildContext context) {
-    final style = Type.lede(context);
-    // The statement is split so the underlined word can carry its own stack.
-    const before = 'Flutter';
-    final after = Copy.heroStatement.substring(
-        Copy.heroStatement.indexOf(' engineer'));
-    return Text.rich(
-      TextSpan(children: [
-        WidgetSpan(
-          alignment: PlaceholderAlignment.baseline,
-          baseline: TextBaseline.alphabetic,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Text(before,
-                  style: style.copyWith(fontWeight: FontWeight.w600)),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: -4,
-                child: AnimatedBuilder(
-                  animation: _underline,
-                  builder: (context, _) => WobblyUnderline(
-                    progress: Curves.easeOutCubic.transform(
-                        reducedMotion(context) ? 1 : _underline.value),
+        Positioned(
+          bottom: -60,
+          right: -100,
+          child: GlowBlob(
+              size: fluid(context, 280, 520),
+              color: Palette.cyan,
+              opacity: 0.1),
+        ),
+        SectionShell(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: viewport * 0.9),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: fluid(context, 40, 72)),
+                _staged(0.0, 0.35, const _AvatarRing()),
+                SizedBox(height: fluid(context, 26, 38)),
+                _staged(
+                  0.1,
+                  0.45,
+                  Text(Copy.kicker,
+                      textAlign: TextAlign.center,
+                      style: Type.label(context, color: Palette.cyan)),
+                ),
+                SizedBox(height: fluid(context, 14, 20)),
+                _staged(
+                  0.2,
+                  0.55,
+                  GradientText(Copy.name,
+                      textAlign: TextAlign.center,
+                      style: Type.display(context)),
+                ),
+                SizedBox(height: fluid(context, 10, 16)),
+                _staged(
+                  0.3,
+                  0.65,
+                  TypingText(
+                    phrases: Copy.roles,
+                    style: Type.title(context, min: 20, max: 30)
+                        .copyWith(color: Palette.text),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        TextSpan(text: after, style: style),
-      ]),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// STACK MARQUEE STRIP
-// ---------------------------------------------------------------------------
-
-/// Continuous ticker between hero and work. Items are separated by amber
-/// diamonds, a nod to the baseball infield up top.
-class MarqueeStrip extends StatelessWidget {
-  const MarqueeStrip({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Palette.line),
-          bottom: BorderSide(color: Palette.line),
-        ),
-      ),
-      child: Marquee(
-        children: [
-          for (final item in marqueeItems)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 26),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(item,
-                      style: Type.heading(context, min: 18, max: 26)
-                          .copyWith(color: Palette.paperDim)),
-                  const SizedBox(width: 52),
-                  Transform.rotate(
-                    angle: 0.785398, // 45deg: a tiny infield diamond
-                    child: Container(
-                        width: 7, height: 7, color: Palette.amber),
+                SizedBox(height: fluid(context, 18, 26)),
+                _staged(
+                  0.4,
+                  0.75,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 640),
+                    child: Text(Copy.heroStatement,
+                        textAlign: TextAlign.center,
+                        style: Type.lede(context)),
                   ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// WORK
-// ---------------------------------------------------------------------------
-
-class WorkSection extends StatelessWidget {
-  const WorkSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SectionShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: fluid(context, 72, 140)),
-          const SectionHeader(
-              index: '01', label: 'Selected work', title: 'Shipped, not shelved'),
-          SizedBox(height: fluid(context, 40, 80)),
-          for (var i = 0; i < projects.length; i++) ...[
-            _ProjectRow(project: projects[i], flip: i.isOdd),
-            if (i != projects.length - 1)
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    vertical: fluid(context, 32, 56)),
-                child: Container(height: 1, color: Palette.line),
-              ),
-          ],
-          SizedBox(height: fluid(context, 48, 88)),
-          const _SideProjects(),
-          SizedBox(height: fluid(context, 72, 140)),
-        ],
-      ),
-    );
-  }
-}
-
-/// One editorial project row. Desktop alternates motif left / motif right;
-/// mobile stacks. The whole row is one hover surface.
-class _ProjectRow extends StatefulWidget {
-  final Project project;
-  final bool flip;
-
-  const _ProjectRow({required this.project, required this.flip});
-
-  @override
-  State<_ProjectRow> createState() => _ProjectRowState();
-}
-
-class _ProjectRowState extends State<_ProjectRow> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = widget.project;
-    final mobile = isMobile(context);
-
-    final motif = Reveal(
-      dy: 28,
-      child: ProjectMotifView(motif: p.motif, hovered: _hover),
-    );
-
-    final info = Reveal(
-      delay: const Duration(milliseconds: 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Giant mono index, print-style folio number.
-          Text(p.index,
-              style: Type.code(context, color: Palette.amber)
-                  .copyWith(fontSize: fluid(context, 14, 18))),
-          const SizedBox(height: 10),
-          AnimatedSlide(
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeOut,
-            offset: _hover && !mobile
-                ? const Offset(0.012, 0)
-                : Offset.zero,
-            child: Text(p.name,
-                style: Type.heading(context, min: 30, max: 52)),
-          ),
-          const SizedBox(height: 8),
-          Text(p.role.toUpperCase(),
-              style: Type.label(context)),
-          const SizedBox(height: 18),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Text(p.description,
-                style: Type.body(context, color: const Color(0xFFBBB2A0))),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [for (final tag in p.tags) TagChip(tag)],
-          ),
-        ],
-      ),
-    );
-
-    final row = mobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [motif, const SizedBox(height: 28), info],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: widget.flip
-                ? [
-                    Expanded(flex: 7, child: info),
-                    const SizedBox(width: 64),
-                    Expanded(flex: 5, child: motif),
-                  ]
-                : [
-                    Expanded(flex: 5, child: motif),
-                    const SizedBox(width: 64),
-                    Expanded(flex: 7, child: info),
-                  ],
-          );
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: row,
-    );
-  }
-}
-
-/// The "also built" list: one line per item, no cards.
-class _SideProjects extends StatelessWidget {
-  const _SideProjects();
-
-  @override
-  Widget build(BuildContext context) {
-    return Reveal(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('ALSO BUILT', style: Type.label(context)),
-          const SizedBox(height: 16),
-          for (final side in sideProjects)
-            Container(
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Palette.line)),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: isMobile(context)
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(side.name, style: Type.code(context)),
-                        const SizedBox(height: 4),
-                        Text(side.note,
-                            style: Type.body(context,
-                                color: Palette.paperDim)),
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                            width: 220,
-                            child:
-                                Text(side.name, style: Type.code(context))),
-                        Expanded(
-                          child: Text(side.note,
-                              style: Type.body(context,
-                                  color: Palette.paperDim)),
-                        ),
-                      ],
-                    ),
-            ),
-          Container(height: 1, color: Palette.line),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// STACK (pubspec terminal)
-// ---------------------------------------------------------------------------
-
-/// The stack, presented as the file every Flutter dev opens first.
-/// Types itself out once when scrolled into view.
-class StackSection extends StatefulWidget {
-  const StackSection({super.key});
-
-  @override
-  State<StackSection> createState() => _StackSectionState();
-}
-
-class _StackSectionState extends State<StackSection>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _typer = AnimationController(
-    vsync: this,
-    // Duration scales with content so typing speed feels constant.
-    duration: Duration(milliseconds: pubspecLines.join().length * 8),
-  );
-
-  @override
-  void dispose() {
-    _typer.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SectionShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionHeader(
-              index: '02',
-              label: 'Stack',
-              title: 'pubspec.yaml, the honest CV'),
-          SizedBox(height: fluid(context, 32, 56)),
-          Reveal(
-            // Start the typewriter the first time the terminal shows up.
-            child: _TerminalWindow(
-              onVisible: () {
-                if (_typer.status == AnimationStatus.dismissed) {
-                  reducedMotion(context)
-                      ? _typer.value = 1
-                      : _typer.forward();
-                }
-              },
-              typer: _typer,
-            ),
-          ),
-          SizedBox(height: fluid(context, 72, 140)),
-        ],
-      ),
-    );
-  }
-}
-
-class _TerminalWindow extends StatefulWidget {
-  final VoidCallback onVisible;
-  final AnimationController typer;
-
-  const _TerminalWindow({required this.onVisible, required this.typer});
-
-  @override
-  State<_TerminalWindow> createState() => _TerminalWindowState();
-}
-
-class _TerminalWindowState extends State<_TerminalWindow> {
-  @override
-  void initState() {
-    super.initState();
-    // The parent Reveal has already gated visibility; when this widget
-    // first builds inside a played reveal we start typing shortly after.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 350), () {
-        if (mounted) widget.onVisible();
-      });
-    });
-  }
-
-  /// Colors one pubspec line: keys dim-amber, values paper, comments muted.
-  TextSpan _colorLine(BuildContext context, String line) {
-    final comment = line.indexOf('#');
-    final colon = line.indexOf(':');
-    final base = Type.code(context);
-    if (line.trimLeft().startsWith('#')) {
-      return TextSpan(
-          text: line, style: base.copyWith(color: Palette.paperDim));
-    }
-    final spans = <TextSpan>[];
-    var body = line;
-    var trailing = '';
-    if (comment != -1) {
-      trailing = line.substring(comment);
-      body = line.substring(0, comment);
-    }
-    if (colon != -1 && (comment == -1 || colon < comment)) {
-      spans.add(TextSpan(
-          text: body.substring(0, colon + 1),
-          style: base.copyWith(color: Palette.amber)));
-      spans.add(TextSpan(text: body.substring(colon + 1), style: base));
-    } else {
-      spans.add(TextSpan(text: body, style: base));
-    }
-    if (trailing.isNotEmpty) {
-      spans.add(TextSpan(
-          text: trailing, style: base.copyWith(color: Palette.paperDim)));
-    }
-    return TextSpan(children: spans);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final full = pubspecLines.join('\n');
-    return Container(
-      decoration: BoxDecoration(
-        color: Palette.inkRaised,
-        border: Border.all(color: Palette.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title bar with the three dots, outlined not filled: a wink at
-          // the convention without cosplaying macOS.
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Palette.line)),
-            ),
-            child: Row(
-              children: [
-                for (var i = 0; i < 3; i++)
-                  Container(
-                    margin: const EdgeInsets.only(right: 7),
-                    width: 9,
-                    height: 9,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Palette.paperDim),
-                    ),
+                ),
+                SizedBox(height: fluid(context, 26, 36)),
+                _staged(
+                  0.5,
+                  0.85,
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 14,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      GradientButton(
+                        text: 'Explore my work',
+                        icon: Icons.arrow_downward_rounded,
+                        onTap: widget.onSeeWork,
+                      ),
+                      OutlineButton(
+                          text: "Let's talk", onTap: widget.onContact),
+                    ],
                   ),
-                const SizedBox(width: 10),
-                Text('~/jeffry_arias/pubspec.yaml',
-                    style: Type.label(context)),
+                ),
+                SizedBox(height: fluid(context, 40, 64)),
+                _staged(0.62, 1.0, const _StatsCard()),
+                SizedBox(height: fluid(context, 40, 72)),
               ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(fluid(context, 16, 28)),
-            child: AnimatedBuilder(
-              animation: widget.typer,
-              builder: (context, _) {
-                final visible = full.substring(
-                    0, (full.length * widget.typer.value).round());
-                final lines = visible.split('\n');
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final line in lines)
-                        Text.rich(_colorLine(context, line.isEmpty ? ' ' : line)),
-                    ],
-                  ),
-                );
-              },
+        ),
+      ],
+    );
+  }
+}
+
+/// Monogram avatar inside a rotating gradient ring: the sweep gradient arc
+/// spins forever (SpinForever) while the core stays still.
+class _AvatarRing extends StatelessWidget {
+  const _AvatarRing();
+
+  @override
+  Widget build(BuildContext context) {
+    final size = fluid(context, 108, 148);
+    return SizedBox(
+      width: size + 14,
+      height: size + 14,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SpinForever(
+            child: Container(
+              width: size + 14,
+              height: size + 14,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    Palette.blue,
+                    Palette.cyan,
+                    Colors.transparent,
+                    Palette.blue,
+                  ],
+                  stops: [0.0, 0.45, 0.75, 1.0],
+                ),
+              ),
             ),
           ),
+          Container(
+            width: size,
+            height: size,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Palette.surface,
+              boxShadow: [
+                BoxShadow(
+                    color: Palette.blue.withValues(alpha: 0.35),
+                    blurRadius: 40),
+              ],
+            ),
+            child: GradientText(
+              'JA',
+              style: Type.display(context, min: 34, max: 48),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Stats band with animated counters. Counters start when the card reveals.
+class _StatsCard extends StatelessWidget {
+  const _StatsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final mobile = isMobile(context);
+    return GlowCard(
+      padding: EdgeInsets.symmetric(
+          horizontal: fluid(context, 20, 48), vertical: fluid(context, 22, 34)),
+      child: Wrap(
+        spacing: fluid(context, 24, 64),
+        runSpacing: 26,
+        alignment: WrapAlignment.center,
+        children: [
+          for (final s in stats)
+            SizedBox(
+              width: mobile ? 130 : 170,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CountUp(value: s.value, style: Type.stat(context)),
+                      GradientText(s.suffix,
+                          style: Type.stat(context).copyWith(
+                              fontSize: fluid(context, 24, 34))),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(s.label.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: Type.label(context, min: 9.5, max: 11)),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -612,42 +341,450 @@ class AboutSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mobile = isMobile(context);
-    final quote = Reveal(
-      child: Text(
-        '"An app is not done until it behaves offline, on a cheap Android, '
-        'with bad signal."',
-        style: Type.heading(context, min: 24, max: 40)
-            .copyWith(color: Palette.paper),
-      ),
+    final story = Reveal(
+      delay: const Duration(milliseconds: 120),
+      child: Text(Copy.aboutBody, style: Type.body(context)),
     );
-    final body = Reveal(
-      delay: const Duration(milliseconds: 140),
-      child: Text(Copy.aboutBody,
-          style: Type.body(context, color: const Color(0xFFBBB2A0))),
+    final facts = Reveal(
+      delay: const Duration(milliseconds: 240),
+      child: GlowCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('QUICK FACTS', style: Type.label(context, color: Palette.cyan)),
+            const SizedBox(height: 18),
+            for (final fact in const [
+              'Based in San José, Costa Rica',
+              'Remote with US teams via FullStack Labs',
+              'Flutter on iOS, Android and web',
+              'Spanish and English, daily',
+              'Side quests in WordPress and WooCommerce',
+            ]) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7),
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: Palette.gradient,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: Text(fact,
+                          style: Type.body(context, color: Palette.text))),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
     );
 
     return SectionShell(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(
-              index: '03', label: 'About', title: Copy.aboutTitle),
-          SizedBox(height: fluid(context, 36, 64)),
-          // Editorial split: pull-quote column + reading column.
+          SizedBox(height: fluid(context, 70, 130)),
+          SectionHeader(
+              label: 'About',
+              title: Copy.aboutTitle,
+              subtitle: Copy.aboutLead),
+          SizedBox(height: fluid(context, 36, 56)),
           mobile
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [quote, const SizedBox(height: 28), body],
-                )
+              ? Column(children: [story, const SizedBox(height: 28), facts])
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 5, child: quote),
-                    const SizedBox(width: 80),
-                    Expanded(flex: 6, child: body),
+                    Expanded(flex: 7, child: story),
+                    const SizedBox(width: 56),
+                    Expanded(flex: 5, child: facts),
                   ],
                 ),
-          SizedBox(height: fluid(context, 72, 140)),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// EXPERIENCE TIMELINE
+// ---------------------------------------------------------------------------
+
+class ExperienceSection extends StatelessWidget {
+  const ExperienceSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionShell(
+      child: Column(
+        children: [
+          SizedBox(height: fluid(context, 70, 130)),
+          const SectionHeader(
+            label: 'Experience',
+            title: 'Where the commits went',
+            subtitle:
+                'Client work, team products and my own apps, all shipping.',
+          ),
+          SizedBox(height: fluid(context, 36, 56)),
+          for (var i = 0; i < experience.length; i++)
+            _TimelineEntry(
+              entry: experience[i],
+              isLast: i == experience.length - 1,
+              delayMs: 100 * i,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One timeline row: gradient node + connecting line on the left,
+/// glow card with the entry on the right.
+class _TimelineEntry extends StatelessWidget {
+  final Experience entry;
+  final bool isLast;
+  final int delayMs;
+
+  const _TimelineEntry({
+    required this.entry,
+    required this.isLast,
+    required this.delayMs,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Rail: node + line.
+          SizedBox(
+            width: 34,
+            child: Column(
+              children: [
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: Palette.gradient,
+                    boxShadow: [
+                      BoxShadow(
+                          color: Palette.cyan.withValues(alpha: 0.5),
+                          blurRadius: 12),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Palette.blue.withValues(alpha: 0.5),
+                            Palette.blue.withValues(alpha: 0.08),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 26),
+              child: Reveal(
+                delay: Duration(milliseconds: delayMs),
+                child: GlowCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(entry.role, style: Type.title(context)),
+                          TagChip(entry.period, accent: true),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(entry.org,
+                          style: Type.mono(context, color: Palette.cyan)),
+                      const SizedBox(height: 12),
+                      Text(entry.summary, style: Type.body(context)),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [for (final t in entry.tags) TagChip(t)],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SKILLS
+// ---------------------------------------------------------------------------
+
+class SkillsSection extends StatelessWidget {
+  const SkillsSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final cols = w >= Breaks.desktop ? 3 : (w >= Breaks.mobile ? 2 : 1);
+    return SectionShell(
+      child: Column(
+        children: [
+          SizedBox(height: fluid(context, 70, 130)),
+          const SectionHeader(
+            label: 'Skills',
+            title: 'The toolbox',
+            subtitle: 'Picked per problem. Sharpened in production.',
+          ),
+          SizedBox(height: fluid(context, 36, 56)),
+          _CardGrid(
+            columns: cols,
+            children: [
+              for (var i = 0; i < skillGroups.length; i++)
+                Reveal(
+                  delay: Duration(milliseconds: 80 * (i % cols)),
+                  child: GlowCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GradientText(skillGroups[i].title,
+                            style: Type.title(context)),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final item in skillGroups[i].items)
+                              TagChip(item),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Equal-width card grid built from Rows, so every card in a row stretches
+/// to the same height (Wrap cannot do that).
+class _CardGrid extends StatelessWidget {
+  final int columns;
+  final List<Widget> children;
+  static const gap = 22.0;
+
+  const _CardGrid({required this.columns, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += columns) {
+      final slice = children.sublist(
+          i, (i + columns).clamp(0, children.length));
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var j = 0; j < columns; j++) ...[
+                Expanded(
+                  child: j < slice.length ? slice[j] : const SizedBox(),
+                ),
+                if (j != columns - 1) const SizedBox(width: _CardGrid.gap),
+              ],
+            ],
+          ),
+        ),
+      );
+      rows.add(const SizedBox(height: _CardGrid.gap));
+    }
+    if (rows.isNotEmpty) rows.removeLast();
+    return Column(children: rows);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PROJECTS
+// ---------------------------------------------------------------------------
+
+class ProjectsSection extends StatelessWidget {
+  const ProjectsSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final cols = w >= Breaks.mobile ? 2 : 1;
+    return SectionShell(
+      child: Column(
+        children: [
+          SizedBox(height: fluid(context, 70, 130)),
+          const SectionHeader(
+            label: 'Projects',
+            title: 'Shipped, not shelved',
+            subtitle: 'Case studies from production, not prototypes.',
+          ),
+          SizedBox(height: fluid(context, 36, 56)),
+          _CardGrid(
+            columns: cols,
+            children: [
+              for (var i = 0; i < projects.length; i++)
+                Reveal(
+                  delay: Duration(milliseconds: 90 * (i % cols)),
+                  child: _ProjectCard(project: projects[i]),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProjectCard extends StatefulWidget {
+  final Project project;
+
+  const _ProjectCard({required this.project});
+
+  @override
+  State<_ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<_ProjectCard> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.project;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GlowCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Motif band on top, like a cover image but hand-painted.
+            Container(
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: Palette.line)),
+              ),
+              child: ProjectMotifView(motif: p.motif, hovered: _hover),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                          child: Text(p.name, style: Type.title(context))),
+                      TagChip(p.status, accent: true),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(p.subtitle,
+                      style: Type.mono(context, color: Palette.cyan)),
+                  const SizedBox(height: 12),
+                  Text(p.description, style: Type.body(context)),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [for (final t in p.tags) TagChip(t)],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// WIDGET LAB
+// ---------------------------------------------------------------------------
+
+class LabSection extends StatelessWidget {
+  const LabSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final cols = w >= Breaks.desktop ? 3 : (w >= Breaks.mobile ? 2 : 1);
+    final demos = <Widget>[
+      const SpringOrbDemo(),
+      const StaggerBarsDemo(),
+      const MorphDemo(),
+    ];
+    return SectionShell(
+      child: Column(
+        children: [
+          SizedBox(height: fluid(context, 70, 130)),
+          const SectionHeader(
+            label: 'Widget lab',
+            title: 'Flutter, live on this page',
+            subtitle:
+                'This site is a Flutter app. These demos run in it right now: '
+                'grab, tap and play.',
+          ),
+          SizedBox(height: fluid(context, 36, 56)),
+          _CardGrid(
+            columns: cols,
+            children: [
+              for (var i = 0; i < labDemos.length; i++)
+                Reveal(
+                  delay: Duration(milliseconds: 100 * (i % cols)),
+                  child: GlowCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 190, child: demos[i]),
+                        const SizedBox(height: 10),
+                        GradientText(labDemos[i].title,
+                            style: Type.title(context, min: 16, max: 20)),
+                        const SizedBox(height: 6),
+                        Text(labDemos[i].note, style: Type.body(context)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -658,86 +795,74 @@ class AboutSection extends StatelessWidget {
 // CONTACT + FOOTER
 // ---------------------------------------------------------------------------
 
-class ContactSection extends StatefulWidget {
+class ContactSection extends StatelessWidget {
   const ContactSection({super.key});
 
   @override
-  State<ContactSection> createState() => _ContactSectionState();
-}
-
-class _ContactSectionState extends State<ContactSection> {
-  bool _hover = false;
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Palette.line)),
-      ),
-      child: SectionShell(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: fluid(context, 64, 120)),
-            const SectionHeader(
-                index: '04', label: 'Contact', title: Copy.contactTitle),
-            SizedBox(height: fluid(context, 28, 48)),
-            Reveal(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Text(Copy.contactNote,
-                    style: Type.body(context, color: const Color(0xFFBBB2A0))),
+    return Stack(
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: -180,
+          child: Center(
+            child: GlowBlob(size: fluid(context, 400, 700), opacity: 0.14),
+          ),
+        ),
+        SectionShell(
+          child: Column(
+            children: [
+              SizedBox(height: fluid(context, 70, 130)),
+              SectionHeader(
+                label: 'Contact',
+                title: Copy.contactTitle,
+                subtitle: Copy.contactNote,
               ),
-            ),
-            SizedBox(height: fluid(context, 32, 56)),
-            // The email IS the CTA: giant, serif, underlined on hover.
-            // One primary action on the whole page, on purpose.
-            Reveal(
-              delay: const Duration(milliseconds: 120),
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                onEnter: (_) => setState(() => _hover = true),
-                onExit: (_) => setState(() => _hover = false),
-                child: GestureDetector(
-                  onTap: () => openUrl('mailto:${Links.email}'),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 220),
-                      style: Type.display(context, min: 24, max: 72).copyWith(
-                        color: _hover ? Palette.amber : Palette.paper,
+              SizedBox(height: fluid(context, 30, 44)),
+              Reveal(
+                delay: const Duration(milliseconds: 120),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => openUrl('mailto:${Links.email}'),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: GradientText(
+                        Links.email,
+                        style: Type.display(context, min: 22, max: 54),
                       ),
-                      child: Text(Links.email),
                     ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: fluid(context, 28, 44)),
-            Reveal(
-              delay: const Duration(milliseconds: 220),
-              child: Wrap(
-                spacing: 32,
-                runSpacing: 14,
-                children: [
-                  HoverLink(
-                      text: 'GitHub',
-                      showArrow: true,
-                      onTap: () => openUrl(Links.github)),
-                  HoverLink(
-                      text: 'LinkedIn',
-                      showArrow: true,
-                      onTap: () => openUrl(Links.linkedin)),
-                ],
+              SizedBox(height: fluid(context, 26, 40)),
+              Reveal(
+                delay: const Duration(milliseconds: 220),
+                child: Wrap(
+                  spacing: 16,
+                  runSpacing: 14,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    GradientButton(
+                        text: 'Email me',
+                        icon: Icons.mail_outline_rounded,
+                        onTap: () => openUrl('mailto:${Links.email}')),
+                    OutlineButton(
+                        text: 'GitHub', onTap: () => openUrl(Links.github)),
+                    OutlineButton(
+                        text: 'LinkedIn',
+                        onTap: () => openUrl(Links.linkedin)),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: fluid(context, 64, 110)),
-            const _Footer(),
-            const SizedBox(height: 28),
-          ],
+              SizedBox(height: fluid(context, 60, 100)),
+              const _Footer(),
+              const SizedBox(height: 26),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -749,16 +874,16 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     final mobile = isMobile(context);
     final credit = Text(Copy.footerLine,
-        style: Type.label(context, min: 10.5, max: 12));
+        style: Type.label(context, min: 10, max: 11.5));
     // The hot-reload hint only matters where there is a keyboard.
     final hint = Text(Copy.hotReloadHint.toUpperCase(),
-        style: Type.label(context, min: 10.5, max: 12)
-            .copyWith(color: Palette.amber));
+        style:
+            Type.label(context, min: 10, max: 11.5).copyWith(color: Palette.cyan));
     return Container(
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Palette.line)),
       ),
-      padding: const EdgeInsets.only(top: 22),
+      padding: const EdgeInsets.only(top: 20),
       child: mobile
           ? credit
           : Row(

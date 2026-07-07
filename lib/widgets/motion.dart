@@ -1,14 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
 import '../theme.dart';
 
-/// Motion policy for the whole site, N3 on the expressivity scale:
-///  - one orchestrated hero entrance (staggered, plays once),
-///  - small scroll reveals (24px rise, play once, never re-trigger),
-///  - rich hovers under 300ms,
-///  - everything animates transform + opacity only,
-///  - `MediaQuery.disableAnimations` (prefers-reduced-motion) kills it all.
+/// Motion policy: one orchestrated hero entrance (staggered Intervals on a
+/// single controller), scroll reveals that play once, animated counters,
+/// a typing role rotator, and live physics demos in the Widget Lab.
+/// `MediaQuery.disableAnimations` (prefers-reduced-motion) collapses all
+/// of it to static content.
 bool reducedMotion(BuildContext context) =>
     MediaQuery.of(context).disableAnimations;
 
@@ -18,8 +18,7 @@ class RevealBus extends ChangeNotifier {
   void ping() => notifyListeners();
 }
 
-/// Inherited access to the page's [RevealBus] and [ScrollController],
-/// so any widget can self-trigger when it scrolls into view.
+/// Inherited access to the page's [RevealBus] and [ScrollController].
 class ScrollScope extends InheritedWidget {
   final RevealBus bus;
   final ScrollController controller;
@@ -39,17 +38,19 @@ class ScrollScope extends InheritedWidget {
       bus != oldWidget.bus || controller != oldWidget.controller;
 }
 
-/// Fades + rises its child the first time it enters the viewport.
-/// Plays exactly once: re-triggering reveals on every scroll is a
-/// template tell, and repeated motion on read content is hostile.
+/// Fades, rises and slightly scales its child the first time it enters the
+/// viewport. Plays exactly once.
 class Reveal extends StatefulWidget {
   final Widget child;
 
   /// Extra delay after trigger, used to stagger siblings.
   final Duration delay;
 
-  /// Rise distance in px. Keep within 16-32: big slides read as slop.
+  /// Rise distance in px.
   final double dy;
+
+  /// Start scale; 1.0 disables the scale-in.
+  final double fromScale;
 
   /// How far into the viewport the element must be before playing,
   /// as a fraction of viewport height measured from the top.
@@ -59,8 +60,9 @@ class Reveal extends StatefulWidget {
     super.key,
     required this.child,
     this.delay = Duration.zero,
-    this.dy = 24,
-    this.threshold = 0.88,
+    this.dy = 28,
+    this.fromScale = 0.98,
+    this.threshold = 0.9,
   });
 
   @override
@@ -70,7 +72,7 @@ class Reveal extends StatefulWidget {
 class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 640),
+    duration: const Duration(milliseconds: 700),
   );
   late final CurvedAnimation _curve =
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
@@ -120,11 +122,15 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
     return AnimatedBuilder(
       animation: _curve,
       builder: (context, child) {
+        final v = _curve.value;
         return Opacity(
-          opacity: _curve.value,
+          opacity: v,
           child: Transform.translate(
-            offset: Offset(0, widget.dy * (1 - _curve.value)),
-            child: child,
+            offset: Offset(0, widget.dy * (1 - v)),
+            child: Transform.scale(
+              scale: widget.fromScale + (1 - widget.fromScale) * v,
+              child: child,
+            ),
           ),
         );
       },
@@ -133,74 +139,176 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
   }
 }
 
-/// Endless horizontal ticker for the stack strip. Content is duplicated and
-/// the scroll position wraps at half the extent, so the loop is invisible.
-class Marquee extends StatefulWidget {
-  final List<Widget> children;
-  final double speed; // px per second
-  final double height;
+/// Types out a rotating list of phrases with a blinking cursor:
+/// type -> hold -> erase -> next. The classic hero role rotator.
+class TypingText extends StatefulWidget {
+  final List<String> phrases;
+  final TextStyle style;
 
-  const Marquee({
-    super.key,
-    required this.children,
-    this.speed = 42,
-    this.height = 72,
-  });
+  const TypingText({super.key, required this.phrases, required this.style});
 
   @override
-  State<Marquee> createState() => _MarqueeState();
+  State<TypingText> createState() => _TypingTextState();
 }
 
-class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
-  final _scroll = ScrollController();
-  Ticker? _ticker;
-  Duration _last = Duration.zero;
+class _TypingTextState extends State<TypingText> {
+  int _phrase = 0;
+  int _chars = 0;
+  bool _erasing = false;
+  bool _cursorOn = true;
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker(_tick)..start();
+    _schedule();
+    _blink();
   }
 
-  void _tick(Duration elapsed) {
-    final dt = (elapsed - _last).inMicroseconds / 1e6;
-    _last = elapsed;
-    if (!_scroll.hasClients ||
-        !_scroll.position.hasContentDimensions ||
-        reducedMotion(context)) {
-      return; // extents are null until the strip's first layout pass
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  Future<void> _blink() async {
+    while (!_disposed) {
+      await Future.delayed(const Duration(milliseconds: 480));
+      if (_disposed || !mounted) return;
+      setState(() => _cursorOn = !_cursorOn);
     }
-    final half = _scroll.position.maxScrollExtent / 2;
-    if (half <= 0) return;
-    var next = _scroll.offset + widget.speed * dt;
-    if (next >= half) next -= half; // seamless wrap at the duplicate seam
-    _scroll.jumpTo(next);
+  }
+
+  Future<void> _schedule() async {
+    // Reduced motion: show the first phrase, no typing loop.
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (_disposed || !mounted) return;
+    if (reducedMotion(context)) {
+      setState(() => _chars = widget.phrases[_phrase].length);
+      return;
+    }
+    while (!_disposed && mounted) {
+      final current = widget.phrases[_phrase];
+      if (!_erasing) {
+        if (_chars < current.length) {
+          setState(() => _chars++);
+          await Future.delayed(const Duration(milliseconds: 55));
+        } else {
+          await Future.delayed(const Duration(milliseconds: 1700));
+          if (_disposed || !mounted) return;
+          _erasing = true;
+        }
+      } else {
+        if (_chars > 0) {
+          setState(() => _chars--);
+          await Future.delayed(const Duration(milliseconds: 28));
+        } else {
+          _erasing = false;
+          setState(() => _phrase = (_phrase + 1) % widget.phrases.length);
+          await Future.delayed(const Duration(milliseconds: 250));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = widget.phrases[_phrase].substring(0, _chars);
+    return Text.rich(
+      TextSpan(children: [
+        TextSpan(text: text, style: widget.style),
+        // Block cursor, cyan, blinking independently of typing speed.
+        TextSpan(
+          text: '▋',
+          style: widget.style.copyWith(
+            color: _cursorOn
+                ? Palette.cyan
+                : Palette.cyan.withValues(alpha: 0),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Counts from 0 to [value] the first time it becomes visible (parent gates
+/// with [Reveal]); pass `play: true` once revealed.
+class CountUp extends StatelessWidget {
+  final int value;
+  final String suffix;
+  final TextStyle style;
+  final bool play;
+
+  const CountUp({
+    super.key,
+    required this.value,
+    required this.style,
+    this.suffix = '',
+    this.play = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!play || reducedMotion(context)) {
+      return Text('$value$suffix', style: style);
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: value.toDouble()),
+      duration: const Duration(milliseconds: 1400),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) =>
+          Text('${v.round()}$suffix', style: style),
+    );
+  }
+}
+
+/// Slow continuous rotation, used for the gradient ring around the avatar.
+class SpinForever extends StatefulWidget {
+  final Widget child;
+  final Duration period;
+
+  const SpinForever({
+    super.key,
+    required this.child,
+    this.period = const Duration(seconds: 6),
+  });
+
+  @override
+  State<SpinForever> createState() => _SpinForeverState();
+}
+
+class _SpinForeverState extends State<SpinForever>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: widget.period);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // One repeating controller; parked entirely when motion is reduced.
+    if (reducedMotion(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
   }
 
   @override
   void dispose() {
-    _ticker?.dispose();
-    _scroll.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Two copies of the content; the ticker wraps before the seam shows.
-    final doubled = [...widget.children, ...widget.children];
-    return SizedBox(
-      height: widget.height,
-      child: ScrollConfiguration(
-        // Hide scrollbars; this strip is decorative, not navigable.
-        behavior: ScrollConfiguration.of(context)
-            .copyWith(scrollbars: false, overscroll: false),
-        child: ListView(
-          controller: _scroll,
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          children: doubled,
-        ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => Transform.rotate(
+        angle: _controller.value * 2 * pi,
+        child: child,
       ),
+      child: widget.child,
     );
   }
 }
@@ -221,14 +329,14 @@ class HotReloadFlash extends StatelessWidget {
         if (progress.value == 0) return const SizedBox.shrink();
         return IgnorePointer(
           child: Container(
-            color: Palette.ink.withValues(alpha: 0.92 * progress.value),
+            color: Palette.bg.withValues(alpha: 0.93 * progress.value),
             alignment: Alignment.center,
             child: Opacity(
               opacity: progress.value,
               child: Text(
                 'Performing hot reload...\nReloaded 1 of 1 libraries.',
                 textAlign: TextAlign.center,
-                style: Type.code(context, color: Palette.amber),
+                style: Type.mono(context, color: Palette.cyan),
               ),
             ),
           ),

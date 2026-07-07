@@ -19,11 +19,11 @@ class PortfolioApp extends StatelessWidget {
       title: 'Jeffry Arias · Flutter engineer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        scaffoldBackgroundColor: Palette.ink,
-        fontFamily: 'Author',
-        // Amber selection so even highlighting text stays on-palette.
+        scaffoldBackgroundColor: Palette.bg,
+        fontFamily: 'Supreme',
+        // Cyan selection so even highlighting text stays on-palette.
         textSelectionTheme: TextSelectionThemeData(
-          selectionColor: Palette.amber.withValues(alpha: 0.3),
+          selectionColor: Palette.cyan.withValues(alpha: 0.3),
         ),
       ),
       home: const PortfolioPage(),
@@ -44,9 +44,11 @@ class _PortfolioPageState extends State<PortfolioPage>
   final _bus = RevealBus();
 
   // Anchor keys for nav jumps.
-  final _workKey = GlobalKey();
-  final _stackKey = GlobalKey();
   final _aboutKey = GlobalKey();
+  final _experienceKey = GlobalKey();
+  final _skillsKey = GlobalKey();
+  final _projectsKey = GlobalKey();
+  final _labKey = GlobalKey();
   final _contactKey = GlobalKey();
 
   /// Incremented by the hot-reload easter egg; keys the whole body so every
@@ -69,9 +71,11 @@ class _PortfolioPageState extends State<PortfolioPage>
 
   void _jump(String section) {
     final key = switch (section) {
-      'work' => _workKey,
-      'stack' => _stackKey,
       'about' => _aboutKey,
+      'experience' => _experienceKey,
+      'skills' => _skillsKey,
+      'projects' => _projectsKey,
+      'lab' => _labKey,
       _ => _contactKey,
     };
     final ctx = key.currentContext;
@@ -135,19 +139,21 @@ class _PortfolioPageState extends State<PortfolioPage>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         NavBar(onJump: _jump),
-                        HeroSection(onSeeWork: () => _jump('work')),
-                        const MarqueeStrip(),
-                        WorkSection(key: _workKey),
-                        StackSection(key: _stackKey),
+                        HeroSection(
+                          onSeeWork: () => _jump('projects'),
+                          onContact: () => _jump('contact'),
+                        ),
                         AboutSection(key: _aboutKey),
+                        ExperienceSection(key: _experienceKey),
+                        SkillsSection(key: _skillsKey),
+                        ProjectsSection(key: _projectsKey),
+                        LabSection(key: _labKey),
                         ContactSection(key: _contactKey),
                       ],
                     ),
                   ),
                 ),
               ),
-              // Film grain across the viewport, above content, below chrome.
-              const Positioned.fill(child: GrainOverlay()),
               // Reading progress hairline.
               Positioned(
                 top: 0,
