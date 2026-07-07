@@ -244,7 +244,11 @@ class _MorphDemoState extends State<MorphDemo> {
           height: _alt ? 72 : 84,
           decoration: BoxDecoration(
             color: _alt ? Palette.cyan : Palette.blue,
-            borderRadius: BorderRadius.circular(_alt ? 18 : 999),
+            // 60 already renders as a full circle on an 84px box, and 22
+            // keeps a cushion above zero: easeInOutBack overshoots past the
+            // tween ends, and a lerped radius below 0 clamps to square
+            // corners for a frame. This range never reaches that point.
+            borderRadius: BorderRadius.circular(_alt ? 22 : 60),
             boxShadow: [
               BoxShadow(
                 color: (_alt ? Palette.cyan : Palette.blue)

@@ -23,6 +23,7 @@ flutter:
 
   assets:
     - assets/fonts/
+    - assets/images/
 
   # Self-hosted type. Chillax (display) and Supreme (text) come from
   # Fontshare / Indian Type Foundry under the FFL. Fragment Mono is OFL.

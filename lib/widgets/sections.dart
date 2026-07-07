@@ -274,6 +274,9 @@ class _AvatarRing extends StatelessWidget {
               ),
             ),
           ),
+          // GitHub profile photo painted straight into the circle's
+          // decoration. The JA monogram sits underneath as a fallback while
+          // the image resolves (or if it ever fails).
           Container(
             width: size,
             height: size,
@@ -290,6 +293,17 @@ class _AvatarRing extends StatelessWidget {
             child: GradientText(
               'JA',
               style: Type.display(context, min: 34, max: 48),
+            ),
+          ),
+          Container(
+            width: size,
+            height: size,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: AssetImage('assets/images/avatar.jpg'),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ],
