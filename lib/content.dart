@@ -29,24 +29,24 @@ abstract class Copy {
 
   static const aboutTitle = 'Career story';
   static const aboutLead =
-      'From client apps to my own products, always in Dart.';
+      'From full-stack logistics to my own products in Flutter.';
   static const aboutBody =
       'I write Dart for a living and then keep writing it after hours. '
       'Days go to Prep Baseball through FullStack Labs, the consumer app '
       'of the largest amateur baseball scouting network in the US. Nights '
-      'go to NuMbi, my nutrition app for a Costa Rican practice, and to '
-      'Vivco, the condominium platform our four-person team is building.\n\n'
-      'Along the way I shipped a mobile banking app with biometric login '
-      'and SSL pinning for a Costa Rican mutual, built WordPress admin '
-      'panels that talk straight to Firestore, and set up CI/CD pipelines '
-      'so every release is a button, not a ritual.\n\n'
+      'go to NuMbi, my freemium nutrition app for the Costa Rican market, '
+      'and to Vivco, the condominium platform our four-person team is '
+      'building.\n\n'
+      'Before that I spent three years leading MutualMovil, mobile banking '
+      'for a Costa Rican mutual that passed 100,000 downloads, migrating it '
+      'from two native codebases into one Flutter app. And I got my '
+      'full-stack start at ePRAC Supply, building the logistics platforms '
+      'a supply chain runs on: warehouse management, delivery tracking and '
+      'container yard control, across mobile, desktop and web.\n\n'
       'I also run an AI-native workflow: Claude Code as a daily pair '
       'programmer, custom skills and hooks tuned to each project, MCP '
       'servers wiring my tools together, and an AI review gate in CI that '
-      'every pull request passes before a human merges it.\n\n'
-      'Opinions I will defend: state management should match the problem, '
-      'not the trend. Ship to a cheap Android before you ship to an iPhone. '
-      'And a well-kept CHANGELOG is a love letter to your future self.';
+      'every pull request passes before a human merges it.';
 
   static const contactTitle = "Let's build something";
   static const contactNote =
@@ -69,7 +69,7 @@ class Stat {
 
 const stats = [
   Stat(4, '+', 'Apps in production'),
-  Stat(117, '+', 'Automated tests in NuMbi'),
+  Stat(100, 'K+', 'Downloads on MutualMovil'),
   Stat(4, '', 'State management stacks'),
   Stat(2, '', 'App stores, plus web'),
 ];
@@ -109,37 +109,52 @@ const experience = [
     tags: ['Flutter', 'Riverpod', 'Isar', 'GoRouter', 'NFC + QR'],
   ),
   Experience(
-    role: 'Founder & Developer',
-    org: 'NuMbi',
-    period: '2025 – Present',
-    status: 'Live',
-    summary:
-        'Nutrition app for a Costa Rican practice: 2,800+ local foods, '
-        'macro tracking, recipes and premium content, plus a WordPress '
-        'admin panel that edits Firestore directly.',
-    tags: ['Flutter', 'Riverpod', 'Firestore', 'FCM', 'GA4'],
-  ),
-  Experience(
     role: 'Flutter Engineer',
     org: 'FullStack Labs · Prep Baseball',
-    period: '2024 – Present',
+    period: '2025 – Present',
     status: 'Current',
     summary:
         'Consumer app for the largest amateur baseball scouting network in '
-        'the US. Player profiles, rankings and event coverage on iOS, '
-        'Android and web from one codebase.',
+        'the US, serving 80,000+ annual tournament players. Player '
+        'profiles, rankings and event coverage on iOS, Android and web '
+        'from one codebase.',
     tags: ['Flutter', 'BLoC / Cubits', 'Dio', 'Firebase', 'Web + mobile'],
   ),
   Experience(
-    role: 'Flutter Developer',
-    org: 'Freelance · MutualMovil',
-    period: '2023 – Present',
-    status: 'In production',
+    role: 'Founder & Developer',
+    org: 'NuMbi',
+    period: '2024 – Present',
+    status: 'Live',
     summary:
-        'Mobile banking for a Costa Rican mutual. Biometric login, SSL '
-        'pinning, and dual distribution for Google and Huawei devices. '
-        'Now at v2, maintained in production.',
+        'Freemium nutrition app for the Costa Rican market: macro '
+        'tracking, recipes, an Instagram-style stories feed and premium '
+        'subscriptions with in-app payments. I run the whole stack, from '
+        'the Flutter app to the admin panel and push pipelines.',
+    tags: ['Flutter', 'Riverpod', 'Firestore', 'FCM', 'GA4'],
+  ),
+  Experience(
+    role: 'Flutter Developer',
+    org: 'Grupo Mutual · MutualMovil',
+    period: '2022 – 2025',
+    status: 'Live',
+    summary:
+        'Led Flutter development of a mutual banking app that passed '
+        '100,000 downloads, migrating separate native iOS and Android '
+        'codebases into one. Biometric login, digital signatures, SSL '
+        'pinning, and dual distribution for Google and Huawei devices.',
     tags: ['Flutter', 'GetX', 'Biometrics', 'SSL pinning', 'GMS + HMS'],
+  ),
+  Experience(
+    role: 'Software Developer',
+    org: 'ePRAC Supply',
+    period: '2020 – 2022',
+    status: 'Shipped',
+    summary:
+        'Three logistics platforms in daily operation: warehouse '
+        'management (WMS), delivery tracking and container yard control. '
+        'Full-stack ownership across mobile, desktop and web: API design, '
+        'front end and database.',
+    tags: ['Full-stack', 'WMS', 'REST APIs', 'Databases', 'Mobile + web'],
   ),
 ];
 
@@ -235,19 +250,21 @@ const projects = [
     subtitle: 'Nutrition · Own product',
     status: 'Live',
     description:
-        'Food database of 2,800+ local foods, macro tracking, recipes and '
-        'premium content. Includes a WordPress admin that edits Firestore '
+        'Freemium nutrition app: macro tracking, recipes, an '
+        'Instagram-style stories feed and premium subscriptions with '
+        'in-app payments. Includes a WordPress admin that edits Firestore '
         'directly.',
     tags: ['Flutter', 'Riverpod', 'Firestore', 'FCM'],
     motif: ProjectMotif.rings,
   ),
   Project(
     name: 'MutualMovil',
-    subtitle: 'Banking · Freelance client',
+    subtitle: 'Banking · Grupo Mutual',
     status: 'In production',
     description:
-        'Mobile banking with biometric login and SSL pinning. Dual builds: '
-        'Google Play services and Huawei Mobile Services.',
+        'Mobile banking past 100,000 downloads. Biometric login and SSL '
+        'pinning, with dual builds for Google Play services and Huawei '
+        'Mobile Services.',
     tags: ['Flutter', 'GetX', 'Biometrics', 'HMS'],
     motif: ProjectMotif.card,
   ),
