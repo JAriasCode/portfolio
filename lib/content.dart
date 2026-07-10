@@ -231,7 +231,7 @@ class Project {
   });
 }
 
-enum ProjectMotif { diamond, rings, card, grid, plug, cart }
+enum ProjectMotif { diamond, rings, card, grid, plug, boxes }
 
 const projects = [
   Project(
@@ -289,14 +289,15 @@ const projects = [
     motif: ProjectMotif.plug,
   ),
   Project(
-    name: 'Pinky Singles',
-    subtitle: 'E-commerce · Client',
-    status: 'Live',
+    name: 'ePRAC Logistics',
+    subtitle: 'Supply chain · ePRAC Supply',
+    status: 'Shipped',
     description:
-        'WooCommerce storefront for a trading card shop, with a custom '
-        'Alpine.js admin panel for order management.',
-    tags: ['WooCommerce', 'Alpine.js', 'PHP'],
-    motif: ProjectMotif.cart,
+        'Warehouse management (WMS), delivery tracking and container yard '
+        'control: three platforms running daily logistics operations, '
+        'built full-stack across mobile, desktop and web.',
+    tags: ['Full-stack', 'WMS', 'REST APIs', 'Databases'],
+    motif: ProjectMotif.boxes,
   ),
 ];
 

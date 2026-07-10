@@ -78,8 +78,8 @@ class _MotifPainter extends CustomPainter {
         _paintGrid(canvas, screen);
       case ProjectMotif.plug:
         _paintPlug(canvas, screen);
-      case ProjectMotif.cart:
-        _paintCart(canvas, screen);
+      case ProjectMotif.boxes:
+        _paintBoxes(canvas, screen);
     }
     canvas.restore();
   }
@@ -202,30 +202,41 @@ class _MotifPainter extends CustomPainter {
     }
   }
 
-  /// Pinky Singles: shopping cart made of simple strokes.
-  void _paintCart(Canvas canvas, Rect r) {
+  /// ePRAC logistics: stacked warehouse crates, barcode on top, and a
+  /// dotted delivery route running under the stack.
+  void _paintBoxes(Canvas canvas, Rect r) {
     final c = r.center;
-    final w = r.width * 0.4;
-    final body = Path()
-      ..moveTo(c.dx - w / 2 - 8, c.dy - w * 0.32)
-      ..lineTo(c.dx - w / 2, c.dy - w * 0.32)
-      ..lineTo(c.dx - w / 2 + w * 0.14, c.dy + w * 0.22)
-      ..lineTo(c.dx + w / 2, c.dy + w * 0.22)
-      ..lineTo(c.dx + w / 2 + w * 0.12, c.dy - w * 0.18)
-      ..lineTo(c.dx - w / 2 + w * 0.06, c.dy - w * 0.18);
-    canvas.drawPath(body, _stroke);
-    canvas.drawCircle(
-        Offset(c.dx - w * 0.18, c.dy + w * 0.38), 3.2, _accentFill);
-    canvas.drawCircle(
-        Offset(c.dx + w * 0.34, c.dy + w * 0.38), 3.2, _accentFill);
-    // A card (the product) dropping into the cart.
-    final cardRect = Rect.fromCenter(
-        center: Offset(c.dx + w * 0.05, c.dy - w * 0.42),
-        width: w * 0.2,
-        height: w * 0.28);
-    canvas.drawRRect(
-        RRect.fromRectAndRadius(cardRect, const Radius.circular(2)),
-        _accent..strokeWidth = 1.6);
+    final s = r.width * 0.24; // crate side length
+    final bottomY = c.dy + s * 0.55;
+    // Pyramid of crates: two on the floor, one centered on top.
+    final crates = [
+      Rect.fromCenter(
+          center: Offset(c.dx - s * 0.55, bottomY), width: s, height: s),
+      Rect.fromCenter(
+          center: Offset(c.dx + s * 0.55, bottomY), width: s, height: s),
+      Rect.fromCenter(
+          center: Offset(c.dx, bottomY - s - 3), width: s, height: s),
+    ];
+    for (final crate in crates) {
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(crate, const Radius.circular(3)), _stroke);
+    }
+    // Barcode strokes on the top crate: the scanned SKU.
+    final top = crates[2];
+    for (var i = 0; i < 4; i++) {
+      final x = top.left + s * 0.24 + i * s * 0.18;
+      canvas.drawLine(
+          Offset(x, top.top + s * 0.24),
+          Offset(x, top.bottom - s * 0.24),
+          i == 1 ? (_accent..strokeWidth = 1.6) : _stroke);
+    }
+    // Dotted route with a destination dot: merchandise on the move.
+    final routeY = bottomY + s * 0.85;
+    for (var i = 0; i < 5; i++) {
+      canvas.drawCircle(
+          Offset(c.dx - s * 1.1 + i * s * 0.5, routeY), 1.6, _accentFill);
+    }
+    canvas.drawCircle(Offset(c.dx + s * 1.4, routeY), 3.2, _accentFill);
   }
 
   @override
