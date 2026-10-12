@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/portfolio/">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jeffry Arias. Flutter engineer in San José, Costa Rica. Four apps in production: sports media, nutrition, banking and property management.">
+  <meta name="author" content="Jeffry Arias">
+  <meta name="theme-color" content="#141210">
+
+  <!-- Open Graph for link previews -->
+  <meta property="og:title" content="Jeffry Arias · Flutter engineer">
+  <meta property="og:description" content="Flutter engineer in Costa Rica. Four apps in production, one codebase each.">
+  <meta property="og:type" content="website">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Jeffry Arias">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Jeffry Arias · Flutter engineer</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Pre-boot splash: ink background and a mono status line so the first
+       paint matches the app instead of flashing white while Flutter loads. */
+    html, body { margin: 0; height: 100%; background: #141210; }
+    #boot {
+      position: fixed; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      color: #9A9182; font: 13px/1.4 ui-monospace, Menlo, monospace;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+  <div id="boot">flutter run --release</div>
+  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Remove the splash once Flutter has rendered its first frame.
+    window.addEventListener('flutter-first-frame', function () {
+      var boot = document.getElementById('boot');
+      if (boot) boot.remove();
+    });
+  </script>
+</body>
+</html>
