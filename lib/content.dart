@@ -23,20 +23,23 @@ abstract class Copy {
   ];
 
   static const heroStatement =
-      'I build production mobile apps in Flutter: sports media, nutrition, '
-      'banking and property management. Four live products, one codebase '
-      'each, shipped to both stores and the web.';
+      'I build production mobile apps in Flutter: advisor marketplaces, '
+      'sports media, nutrition, banking and tabletop gaming. Six live '
+      'products, one codebase each, shipped to both stores and the web.';
 
   static const aboutTitle = 'Career story';
   static const aboutLead =
       'From full-stack logistics to my own products in Flutter.';
   static const aboutBody =
       'I write Dart for a living and then keep writing it after hours. '
-      'Days go to Prep Baseball through FullStack Labs, the consumer app '
-      'of the largest amateur baseball scouting network in the US. Nights '
-      'go to NuMbi, my freemium nutrition app for the Costa Rican market, '
-      'and to Vivco, the condominium platform our four-person team is '
-      'building.\n\n'
+      'Days are split between two US clients: Ingenio, through Svitla, '
+      'where I work on the Keen consumer and advisor apps, and Prep '
+      'Baseball, through FullStack Labs, the consumer app of the largest '
+      'amateur baseball scouting network in the US. Nights go to my own '
+      'products: NuMbi, a freemium nutrition app for the Costa Rican '
+      'market, and Tempo, a life counter and table clock for tabletop card '
+      'games, plus Vivco, the condominium platform our four-person team '
+      'is building.\n\n'
       'Before that I spent three years leading MutualMovil, mobile banking '
       'for a Costa Rican mutual that passed 100,000 downloads, migrating it '
       'from two native codebases into one Flutter app. And I got my '
@@ -68,7 +71,7 @@ class Stat {
 }
 
 const stats = [
-  Stat(4, '+', 'Apps in production'),
+  Stat(6, '+', 'Apps in production'),
   Stat(100, 'K+', 'Downloads on MutualMovil'),
   Stat(4, '', 'State management stacks'),
   Stat(2, '', 'App stores, plus web'),
@@ -98,9 +101,33 @@ class Experience {
 
 const experience = [
   Experience(
+    role: 'Senior Mobile Engineer',
+    org: 'Svitla · Ingenio',
+    period: 'Sep 2026 - Present',
+    status: 'Current',
+    summary:
+        'Keen, an advisor marketplace with live chat and calls. I work '
+        'across both Flutter apps, the consumer app and the advisor app, '
+        'shipping features and fixes and leading the advisor app migration '
+        'from GraphQL to REST.',
+    tags: ['Flutter', 'BLoC', 'GetIt', 'REST + GraphQL', 'Sentry'],
+  ),
+  Experience(
+    role: 'Founder & Developer',
+    org: 'Tempo',
+    period: 'Aug 2026 - Present',
+    status: 'Live',
+    summary:
+        'All-in-one table companion for card game nights: life counter and '
+        'per-player chess clock on one phone lying flat in the middle of '
+        'the table, with every quadrant rotated to face its seat. Offline, '
+        'no account, live on the App Store.',
+    tags: ['Flutter', 'Riverpod', 'Clean architecture', 'Offline'],
+  ),
+  Experience(
     role: 'Mobile Lead',
     org: 'Poker Jacks · Vivco',
-    period: 'May 2026 – Present',
+    period: 'May 2026 - Present',
     status: 'In development',
     summary:
         'Condominium management platform for Costa Rica: visitor passes, '
@@ -111,7 +138,7 @@ const experience = [
   Experience(
     role: 'Flutter Engineer',
     org: 'FullStack Labs · Prep Baseball',
-    period: '2025 – Present',
+    period: '2025 - Present',
     status: 'Current',
     summary:
         'Consumer app for the largest amateur baseball scouting network in '
@@ -123,7 +150,7 @@ const experience = [
   Experience(
     role: 'Founder & Developer',
     org: 'NuMbi',
-    period: '2024 – Present',
+    period: '2024 - Present',
     status: 'Live',
     summary:
         'Freemium nutrition app for the Costa Rican market: macro '
@@ -135,7 +162,7 @@ const experience = [
   Experience(
     role: 'Flutter Developer',
     org: 'Grupo Mutual · MutualMovil',
-    period: '2022 – 2025',
+    period: '2022 - 2025',
     status: 'Live',
     summary:
         'Led Flutter development of a mutual banking app that passed '
@@ -147,7 +174,7 @@ const experience = [
   Experience(
     role: 'Software Developer',
     org: 'ePRAC Supply',
-    period: '2020 – 2022',
+    period: '2020 - 2022',
     status: 'Shipped',
     summary:
         'Three logistics platforms in daily operation: warehouse '
@@ -231,9 +258,20 @@ class Project {
   });
 }
 
-enum ProjectMotif { diamond, rings, card, grid, plug, boxes }
+enum ProjectMotif { chat, diamond, rings, hourglass, card, grid, plug, boxes }
 
 const projects = [
+  Project(
+    name: 'Keen',
+    subtitle: 'Advisor marketplace · Ingenio',
+    status: 'Live',
+    description:
+        'Two Flutter apps, one for consumers and one for advisors, around '
+        'live chat and phone sessions. Features, production fixes and an '
+        'incremental GraphQL to REST migration without breaking live users.',
+    tags: ['Flutter', 'BLoC', 'GoRouter', 'REST'],
+    motif: ProjectMotif.chat,
+  ),
   Project(
     name: 'Prep Baseball',
     subtitle: 'Sports media · FullStack Labs',
@@ -256,6 +294,17 @@ const projects = [
         'directly.',
     tags: ['Flutter', 'Riverpod', 'Firestore', 'FCM'],
     motif: ProjectMotif.rings,
+  ),
+  Project(
+    name: 'Tempo',
+    subtitle: 'Tabletop gaming · Own product',
+    status: 'Live',
+    description:
+        'Life counter and chess clock for 2 to 4 players sharing one phone. '
+        'Seat-rotated quadrants, commander damage, card art backgrounds and '
+        'saved player profiles. Built, branded and shipped solo.',
+    tags: ['Flutter', 'Riverpod', 'CustomPainter', 'Offline'],
+    motif: ProjectMotif.hourglass,
   ),
   Project(
     name: 'MutualMovil',
@@ -310,10 +359,16 @@ class LabDemo {
 }
 
 const labDemos = [
-  LabDemo('Spring physics',
-      'Drag the orb and let go. SpringSimulation brings it home.'),
-  LabDemo('Staggered intervals',
-      'One controller, five bars, offset Interval curves. Tap to replay.'),
-  LabDemo('Implicit morph',
-      'Tap to morph. AnimatedContainer does all the work.'),
+  LabDemo(
+    'Spring physics',
+    'Drag the orb and let go. SpringSimulation brings it home.',
+  ),
+  LabDemo(
+    'Staggered intervals',
+    'One controller, five bars, offset Interval curves. Tap to replay.',
+  ),
+  LabDemo(
+    'Implicit morph',
+    'Tap to morph. AnimatedContainer does all the work.',
+  ),
 ];
